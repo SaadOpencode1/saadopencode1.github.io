@@ -39,6 +39,9 @@ jobs:
           sed -i "s#<script src=\"/app.js\"#<script>window.ASTER_API_BASE = \"${src}\";</script><script src=\"/app.js\"#" out/index.html
           grep -q ASTER_API_BASE out/index.html
           cp out/index.html out/404.html
+          # Pages takes the custom domain from the CNAME file at the root of the
+          # published artifact, which is how this deploy claims aster.runs-at.dev.
+          printf 'aster.runs-at.dev\n' > out/CNAME
           touch out/.nojekyll
           ls -la out
       - uses: actions/upload-pages-artifact@v3
