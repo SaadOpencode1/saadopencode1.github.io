@@ -27,8 +27,13 @@ jobs:
           set -euo pipefail
           src="https://site-5ed2948143ab4f3ab859f7fa976865de.freebuff.page"
           mkdir -p out
-          for f in index.html styles.css app.js markdown.js context.js; do
+          # The host answers /index.html with a redirect to /, so the page is
+          # fetched from the root; the rest are plain files.
+          curl -fsS --max-time 30 "$src/" -o out/index.html
+          test -s out/index.html
+          for f in styles.css app.js markdown.js context.js; do
             curl -fsS --max-time 30 "$src/$f" -o "out/$f"
+            test -s "out/$f"
           done
           grep -q 'src="/app.js"' out/index.html
           sed -i "s#<script src=\"/app.js\"#<script>window.ASTER_API_BASE = \"${src}\";</script><script src=\"/app.js\"#" out/index.html
