@@ -1,0 +1,49 @@
+name: publish
+
+# Builds the copy of Aster served at aster.runs-at.dev from the version that is
+# already deployed, so the app has one source of truth and this repository only
+# ever holds a static mirror of it.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Fetch the deployed app
+        run: |
+          set -euo pipefail
+          src="https://site-5ed2948143ab4f3ab859f7fa976865de.freebuff.page"
+          mkdir -p out
+          for f in index.html styles.css app.js markdown.js context.js; do
+            curl -fsS --max-time 30 "$src/$f" -o "out/$f"
+          done
+          grep -q 'src="/app.js"' out/index.html
+          sed -i "s#<script src=\"/app.js\"#<script>window.ASTER_API_BASE = \"${src}\";</script><script src=\"/app.js\"#" out/index.html
+          grep -q ASTER_API_BASE out/index.html
+          cp out/index.html out/404.html
+          touch out/.nojekyll
+
+      - name: Publish to gh-pages
+        run: |
+          set -euo pipefail
+          cd out
+          git init -q -b gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -qm 'Publish mirror of the deployed app'
+          git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
