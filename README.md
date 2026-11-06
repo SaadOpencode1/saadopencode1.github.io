@@ -11,4 +11,5 @@ the workflow by hand from the Actions tab.
 ## What the app looks like
 
 A dark, quiet home screen: a sidebar of destinations, a welcome line with the
-Aster mark, one wide composer, and a row of prompt pills underneath.
+Aster mark, one wide composer, and a row of prompt pills underneath. Settings
+opens as a single centred card with its own list down the side.
